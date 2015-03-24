@@ -1,0 +1,14 @@
+Source: greatcmakecookoff
+Section: devel
+Priority: optional
+Maintainer: Gijs Molenaar (launchpad ppa build key) <gijs@pythonic.nl>
+Build-Depends: debhelper (>= 8.0.0), cmake, python2.7, python-pytest, cython,
+ git, python-mako, libpython2.7-dev
+Standards-Version: 3.9.4
+Homepage: https://github.com/UCL/GreatCMakeCookOff
+
+Package: greatcmakecookoff
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Bunch of CMake pain in the baker
+ usefull and less than usefull cmake recipes

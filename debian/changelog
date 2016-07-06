@@ -1,3 +1,9 @@
+greatcmakecookoff (2.0.3-1kern1) xenial; urgency=medium
+
+  * first kern release
+
+ -- Gijs Molenaar (launchpad ppa build key) <gijs@pythonic.nl>  Wed, 06 Jul 2016 11:32:36 +0000
+
 greatcmakecookoff (2.0.3-1trusty) trusty; urgency=medium
 
   * New upstream release

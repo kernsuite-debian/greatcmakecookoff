@@ -1,41 +1,5 @@
-greatcmakecookoff (2.0.3-1kern1) xenial; urgency=medium
+greatcmakecookoff (2.1.7-1) UNRELEASED; urgency=low
 
-  * first kern release
+  * Initial Debian release. Closes: #832748
 
- -- Gijs Molenaar (launchpad ppa build key) <gijs@pythonic.nl>  Wed, 06 Jul 2016 11:32:36 +0000
-
-greatcmakecookoff (2.0.3-1trusty) trusty; urgency=medium
-
-  * New upstream release
-
- -- Gijs Molenaar (launchpad ppa build key) <gijs@pythonic.nl>  Tue, 24 Mar 2015 09:18:13 +0000
-
-greatcmakecookoff (2.0.2-1trusty) trusty; urgency=medium
-
-  * New upstream release
-
- -- Gijs Molenaar (launchpad ppa build key) <gijs@pythonic.nl>  Tue, 24 Mar 2015 09:13:11 +0000
-
-greatcmakecookoff (2.0.1-1trusty) trusty; urgency=medium
-
-  * New upstream release
-
- -- Gijs Molenaar (launchpad ppa build key) <gijs@pythonic.nl>  Tue, 24 Mar 2015 09:06:10 +0000
-
-greatcmakecookoff (2.0-3trusty) trusty; urgency=medium
-
-  * disable testse
-
- -- Gijs Molenaar (launchpad ppa build key) <gijs@pythonic.nl>  Tue, 24 Mar 2015 08:15:00 +0000
-
-greatcmakecookoff (2.0-2trusty) trusty; urgency=medium
-
-  * add libpython2.7-dev dependency
-
- -- Gijs Molenaar (launchpad ppa build key) <gijs@pythonic.nl>  Tue, 24 Mar 2015 08:06:34 +0000
-
-greatcmakecookoff (2.0-1trusty) trusty; urgency=low
-
-  * Initial release
-
- -- Gijs Molenaar (launchpad ppa build key) <gijs@pythonic.nl>  Tue, 24 Mar 2015 09:29:07 +0200
+ -- Ole Streicher <olebole@debian.org>  Thu, 28 Jul 2016 15:49:42 +0200

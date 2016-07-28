@@ -8,12 +8,14 @@ if(Eigen3_ARGUMENTS)
 endif()
 
 if(NOT Eigen3_HG_REPOSITORY AND NOT Eigen3_URL)
-  # Can't trust cmake to download file. It will fail bizarely if not compiled
+  # Can't trust cmake to download file. It will fail if not compiled
   # with SSL
   set(file_found FALSE)
+  set(Eigen3_URL "${EXTERNAL_ROOT}/eigen.tgz")
+  set(Eigen3_MD5 8cc513ac6ec687117acadddfcacf551b)
   if(EXISTS "${EXTERNAL_ROOT}/eigen.tgz")
       file(MD5 "${EXTERNAL_ROOT}/eigen.tgz" file_md5)
-      if(file_md5 EQUAL "4d0d77e06fef87b4fcd2c9b72cc8dc55")
+      if(file_md5 EQUAL "${Eigen3_MD5}")
           set(file_found TRUE)
       endif()
   endif()
@@ -22,19 +24,17 @@ if(NOT Eigen3_HG_REPOSITORY AND NOT Eigen3_URL)
       find_package(Wget)
       if(WGET_FOUND)
           execute_process(COMMAND ${WGET_EXECUTABLE}
-            http://bitbucket.org/eigen/eigen/get/3.2.4.tar.gz
+            http://bitbucket.org/eigen/eigen/get/3.2.5.tar.gz
             -O ${EXTERNAL_ROOT}/eigen.tgz
           )
       else()
           find_program(CURL_EXECUTABLE curl)
           execute_process(COMMAND ${CURL_EXECUTABLE}
-            -L http://bitbucket.org/eigen/eigen/get/3.2.4.tar.gz
+            -L http://bitbucket.org/eigen/eigen/get/3.2.5.tar.gz
             -o ${EXTERNAL_ROOT}/eigen.tgz
           )
       endif()
   endif()
-  set(Eigen3_URL "${EXTERNAL_ROOT}/eigen.tgz")
-  set(Eigen3_MD5 4d0d77e06fef87b4fcd2c9b72cc8dc55)
 endif()
 if(NOT Eigen3_BUILD_TYPE)
     set(Eigen3_BUILD_TYPE Release)
@@ -64,6 +64,7 @@ passon_variables(Eigen3
     FILENAME "${EXTERNAL_ROOT}/src/Eigen3Variables.cmake"
     PATTERNS
         "CMAKE_[^_]*_R?PATH"
+        "CMAKE_Fortran_.*"
         "CMAKE_C_.*"
         "CMAKE_CXX_.*"
         "BLAS_.*" "FFTW3_.*"
@@ -74,7 +75,7 @@ passon_variables(Eigen3
 
 # Finally add project
 ExternalProject_Add(
-    Eigen3
+  Lookup-Eigen3
     PREFIX ${EXTERNAL_ROOT}
     ${arguments}
     CMAKE_ARGS
@@ -87,4 +88,4 @@ ExternalProject_Add(
     LOG_BUILD ON
 )
 
-add_recursive_cmake_step(Eigen3 DEPENDEES install)
+add_recursive_cmake_step(Lookup-Eigen3 DEPENDEES install)

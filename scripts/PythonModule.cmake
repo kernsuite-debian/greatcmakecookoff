@@ -117,7 +117,7 @@ function(_pm_add_python_extension module)
     cmake_parse_arguments(${ext}
         ""
         "INSTALL;TARGET;LOCATION;EXTENSION;MODULE_TARGET"
-        "SOURCES;LIBRARIES;DEPENDENCIES"
+        "SOURCES;LIBRARIES;DEPENDENCIES;OBJECTS"
         ${ARGN}
     )
     if("${${ext}_SOURCES}" STREQUAL "")
@@ -134,7 +134,7 @@ function(_pm_add_python_extension module)
     python_extension_targetname(module_target
         ${${ext}_TARGET} MODULE_TARGET ${${ext}_MODULE_TARGET})
 
-    add_library(${module_target} MODULE ${${ext}_SOURCES})
+    add_library(${module_target} MODULE ${${ext}_SOURCES} ${${ext}_OBJECTS})
     target_link_libraries(${module_target} ${PYTHON_LIBRARIES})
     set(output_dir "${location}")
     if(NOT IS_ABSOLUTE "${location}")
@@ -151,7 +151,6 @@ function(_pm_add_python_extension module)
     endif()
     add_dependencies(${container_target} ${module_target})
     if(NOT "${${ext}_DEPENDENCIES}" STREQUAL "")
-        message("ADDING TARGET *** ${${ext}_DEPENDENCIES}")
         add_dependencies(${module_target} ${${ext}_DEPENDENCIES})
     endif()
 
@@ -243,12 +242,9 @@ endfunction()
 function(_pm_add_cython module source)
 
     string(REGEX REPLACE "/" "_" cy "cy.${module}")
-    cmake_parse_arguments(${cy} "CPP" "TARGET" "" ${ARGN})
+    cmake_parse_arguments(${cy} "CPP" "TARGET;STARTLINE" "" ${ARGN})
     # Creates command-line arguments for cython for include directories
-    get_property(included_dirs
-        DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        PROPERTY INCLUDE_DIRECTORIES
-    )
+    get_property(included_dirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
     set(inclusion)
     foreach(included ${included_dirs})
         set(inclusion ${inclusion} -I${included})
@@ -269,33 +265,57 @@ function(_pm_add_cython module source)
     else()
         set(arguments ${PYTHON_EXECUTABLE} -m cython)
     endif()
-    if(${${cy}_CPP})
-        set(c_source "cython_${cy_module}.cc")
+    if(${cy}_CPP)
+        set(generated_source "cython_${cy_module}.cc")
         list(APPEND arguments --cplus)
     else()
-        set(c_source "cython_${cy_module}.c")
+        set(generated_source "cython_${cy_module}.c")
     endif()
 
     # Create C source from cython
     list(APPEND arguments
         "${source}"
-        -o "${CMAKE_CURRENT_BINARY_DIR}/${c_source}" ${inclusion}
+        -o "${CMAKE_CURRENT_BINARY_DIR}/${generated_source}" ${inclusion}
     )
     if(NOT CMAKE_VERSION VERSION_LESS "2.8.10")
-        set(cygdb_line 
-            "--gdb --gdb-outdir ${PROJECT_BINARY_DIR}/cython_debug_files")
+        set(cond "$<$<OR:$<CONFIG:RelWithDebInfo>,$<CONFIG:Debug>>:")
         set(cmdline
-            "$<$<OR:$<CONFIG:RelWithDebInfo>,$<CONFIG:Debug>>:${cygdb_line}>")
-        set(arguments "${arguments} ${cmdline}")
+            "${cond}--gdb> ${cond}--gdb-outdir> ${cond}${PROJECT_BINARY_DIR}/cython_debug_files>")
     endif()
-        
     add_custom_command(
-        OUTPUT "${c_source}"
+        OUTPUT "${generated_source}"
         COMMAND ${arguments}
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         DEPENDS ${DEPENDENCIES}
         COMMENT "Generating c/c++ source ${source} with cython (${directory})"
     )
+    # Adds line at the top of the generated file
+    # Its necessary to deal with some ctype.h vs cctype unpleasantness
+    if(${cy}_STARTLINE)
+      get_filename_component(directory "${generated_source}" DIRECTORY)
+      get_filename_component(filename "${generated_source}" NAME)
+      if("${directory}" STREQUAL "")
+          set(c_source "startlines.${filename}")
+      else()
+          set(c_source "${ddir}/startlines.${filename}")
+      endif()
+      if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/prepend_line.sh")
+          file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/prepend_line.sh"
+            "cd ${CMAKE_CURRENT_BINARY_DIR};"
+            "echo \"${${cy}_STARTLINE}\" > $2;"
+            "cat $1 >> $2;"
+          )
+      endif()
+      add_custom_command(
+          OUTPUT "${c_source}"
+          COMMAND bash ${CMAKE_CURRENT_BINARY_DIR}/prepend_line.sh ${generated_source} ${c_source}
+          WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+          DEPENDS "${generated_source}"
+          COMMENT "Adding starting line to generated cython source ${source} (${directory})"
+      )
+    else()
+      set(c_source "${generated_source}")
+    endif()
 
     # Extension name
     string(REGEX MATCH "[^\\.]*$" extension ${cy_module})
@@ -354,7 +374,7 @@ function(add_python_module module)
     cmake_parse_arguments(${module}
         "FAKE_INIT;NOINSTALL;INSTALL;CPP"
         "HEADER_DESTINATION;TARGETNAME;LOCATION;OUTPUT_PYTHON_SOURCES"
-        "SOURCES;EXCLUDE;LIBRARIES;GLOB"
+        "SOURCES;EXCLUDE;LIBRARIES;GLOB;OBJECTS"
         ${ARGN}
     )
     # Sets submodule, location, and module from module
@@ -410,6 +430,7 @@ function(add_python_module module)
         LOCATION ${extension_location}
         LIBRARIES ${${module}_LIBRARIES}
         SOURCES ${C_SOURCES} ${CPP_SOURCES}
+        OBJECTS ${${module}_OBJECTS}
     )
 
     # Then copy/install pure python files
@@ -436,6 +457,7 @@ function(add_python_module module)
         INSTALL ${do_install}
         LIBRARIES ${${module}_LIBRARIES}
         TARGET ${targetname}
+        OBJECTS ${${module}_OBJECTS}
         SOURCES ${CY_SOURCES}
     )
 

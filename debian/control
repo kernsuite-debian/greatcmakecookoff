@@ -1,14 +1,22 @@
 Source: greatcmakecookoff
 Section: devel
 Priority: optional
-Maintainer: Gijs Molenaar (launchpad ppa build key) <gijs@pythonic.nl>
-Build-Depends: debhelper (>= 8.0.0), cmake, python2.7, python-pytest, cython,
- git, python-mako, libpython2.7-dev
-Standards-Version: 3.9.4
+Maintainer: Gijs Molenaar <gijs@pythonic.nl>
+Uploaders: Ole Streicher <olebole@debian.org>
+Build-Depends: cmake, cython, debhelper (>= 9), python, python-pytest
+Standards-Version: 3.9.8
+Vcs-Git: https://anonscm.debian.org/git/collab-maint/greatcmakecookoff.git
+Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/greatcmakecookoff.git
 Homepage: https://github.com/UCL/GreatCMakeCookOff
 
 Package: greatcmakecookoff
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Architecture: all
+Depends: cmake, ${misc:Depends}
 Description: Bunch of CMake pain in the baker
- usefull and less than usefull cmake recipes
+ This is a repository of useful and less than useful recipes to make life
+ with cmake easier. Features include:
+ .
+  * Find or install a package, aka lookup,
+  * Getting version and git hashes,
+  * Testing CMake scripts,
+  * Adding the Catch testing framework

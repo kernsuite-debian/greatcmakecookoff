@@ -21,7 +21,7 @@ if(CoherentPython_FIND_VERSION_EXACT)
 endif()
 
 # Finds python interpreter first
-find_package(PythonInterp ${version} ${exact} ${required} ${qietly})
+find_package(PythonInterp ${version} ${exact} ${required} ${quietly})
 if(NOT PYTHONINTERP_FOUND)
     return()
 endif()
@@ -47,14 +47,25 @@ if(NOT CMAKE_CROSS_COMPILING)
             endif()
         endif()
     endmacro()
-    # Figures out paths from distutils' sysconfig module
+    # Figures out paths from distutils' sysconfig module and sys.prefix
     # Started off for canopy and virtualenv
     macro(paths_from_distutils_sysconfig)
+        call_python(PYTHON_INTERP_PREFIX "import sys; print(sys.prefix)")
+        if(DEFINED PYTHON_INTERP_PREFIX)
+            FILE(TO_CMAKE_PATH ${PYTHON_INTERP_PREFIX} PYTHON_INTERP_PREFIX)
+            if(EXISTS "${PYTHON_INTERP_PREFIX}/libs")
+                # Conda stores its .lib files in ${PYTHON_INTERP_PREFIX/libs
+                # on windows. (Python35.lib etc needed for linking)
+                # The dlls should be on path.
+                list(INSERT CMAKE_LIBRARY_PATH 0 "${PYTHON_INTERP_PREFIX}/libs")
+            endif()
+        endif()
         call_python(python_include
         "from distutils.sysconfig import get_python_inc"
             "print(get_python_inc())"
         )
         if(DEFINED python_include AND EXISTS "${python_include}")
+            FILE(TO_CMAKE_PATH ${python_include} python_include)
             set(PYTHON_INCLUDE_DIR "${python_include}")
         endif()
         # And tries adding sysconfig.get_python_lib output
@@ -64,6 +75,7 @@ if(NOT CMAKE_CROSS_COMPILING)
             "print(get_python_lib())"
         )
         if(DEFINED python_lib)
+            FILE(TO_CMAKE_PATH ${python_lib} python_lib)
             if(EXISTS "${python_lib}")
                 list(INSERT CMAKE_LIBRARY_PATH 0 "${python_lib}")
             endif()

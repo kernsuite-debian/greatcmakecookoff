@@ -1,17 +1,17 @@
 # Installs GTest into build directory
 if(GTest_ARGUMENTS)
     cmake_parse_arguments(GTest
-        "SVN_REPOSITORY;TIMEOUT"
+        "GIT_REPOSITORY;TIMEOUT"
         ""
         ${GTest_ARGUMENTS}
     )
 endif()
 
-set(arguments SVN_REPOSITORY)
-if(GTest_SVN_REPOSITORY)
-    list(APPEND arguments ${GTest_SVN_REPOSITORY})
+set(arguments GIT_REPOSITORY)
+if(GTest_GIT_REPOSITORY)
+    list(APPEND arguments ${GTest_GIT_REPOSITORY})
 else()
-    list(APPEND arguments http://googletest.googlecode.com/svn/trunk/)
+    list(APPEND arguments https://github.com/google/googletest)
 endif()
 if(GTest_TIMEOUT)
     list(APPEND arguments TIMEOUT ${GTest_TIMEOUT})
@@ -35,7 +35,7 @@ if(MINGW)
 endif()
 
 ExternalProject_Add(
-    GTest
+    Lookup-GTest
     PREFIX "${EXTERNAL_ROOT}"
     ${arguments}
     # Force separate output paths for debug and release builds to allow easy
@@ -43,17 +43,14 @@ ExternalProject_Add(
     CMAKE_ARGS
         -C "${EXTERNAL_ROOT}/src/GTestVariables.cmake"
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_INSTALL_PREFIX=${EXTERNAL_ROOT}
         ${cmake_args}
 
     # Wrap download, configure and build steps in a script to log output
-    INSTALL_COMMAND ""
     UPDATE_COMMAND ""
     LOG_DOWNLOAD ON
     LOG_CONFIGURE ON
     LOG_BUILD ON
 )
 
-add_recursive_cmake_step(GTest DEPENDEES build)
-# Required by FindGTest
-set(GTEST_ROOT "${EXTERNAL_ROOT}/src/GTest-build" CACHE
-    PATH "Path to gtest root install directory")
+add_recursive_cmake_step(Lookup-GTest DEPENDEES install)

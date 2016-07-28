@@ -4,6 +4,9 @@
 # - CFitsIO_LIBRARY is the path to the library
 # - CFitsIO_INCLUDE_DIR is the path to the include directory
 # - CFitsIO_VERSION_STRING is the version of the library
+if(CFitsIO_FOUND)
+  return()
+endif()
 
 find_library(CFitsIO_LIBRARY cfitsio DOC "Path to the cfitsio library")
 if(NOT "$ENV{CASAPATH}" STREQUAL "")
@@ -12,7 +15,7 @@ if(NOT "$ENV{CASAPATH}" STREQUAL "")
 
     find_library(
       CFitsIO_LIBRARY cfitsio
-      NAMES libcfitsio${CMAKE_SHARED_LIBRARY_SUFFIX}.0
+      NAMES libcfitsio${CMAKE_SHARED_LIBRARY_SUFFIX}.1 libcfitsio${CMAKE_SHARED_LIBRARY_SUFFIX}.0
       PATHS "${casapath}" "${casapath}/Frameworks"
       DOC "Path to the cfitsio library"
     )
@@ -47,4 +50,14 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(
 )
 if(CFITSIO_FOUND AND NOT CFitsIO_FOUND)
     set(CFitsIO_FOUND ${CFITSIO_FOUND})
+endif()
+if(CFitsIO_FOUND)
+  if(CFitsIO_LIBRARY MATCHES "\\.a$")
+    add_library(cfitsio STATIC IMPORTED GLOBAL)
+  else()
+    add_library(cfitsio SHARED IMPORTED GLOBAL)
+  endif()
+  set_target_properties(cfitsio PROPERTIES
+    IMPORTED_LOCATION "${CFitsIO_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${CFitsIO_INCLUDE_DIR}")
 endif()

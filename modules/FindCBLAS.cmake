@@ -29,25 +29,25 @@ macro(found_or_not_found_blas)
     endif()
 endmacro()
 
-macro(_look_for_blas_libraries)
+function(_look_for_blas_libraries)
     include(FindPkgConfig)
     pkg_search_module(CBLAS cblas)
     if(NOT CBLAS_FOUND AND PKG_CONFIG_FOUND)
         pkg_search_module(ATLAS atlas)
     else()
-        set(BLAS_LIBRARIES ${CBLAS_LIBRARIES})
-        set(BLAS_INCLUDE_DIR ${CBLAS_INCLUDE_DIRS})
+      set(BLAS_LIBRARIES ${CBLAS_LIBRARIES})
+      set(BLAS_INCLUDE_DIR ${CBLAS_INCLUDE_DIRS})
     endif()
- 
+
     # include -pthread so MKL can be included on Ubuntu + enthought
     if(use_pthread_flag)
-        set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
-        set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -pthread")
+      set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+      set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -pthread")
     endif()
     find_package(BLAS QUIET)
     if(use_pthread_flag)
-        set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
-        set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -pthread")
+      set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+      set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -pthread")
     endif()
 
     # Figures out atlas if necessary
@@ -58,14 +58,41 @@ macro(_look_for_blas_libraries)
             HINTS "${atlas_dir}"
         )
         if(BLAS_atlas_cblas_LIBRARY)
-            set(BLAS_FOUND TRUE)
+          set(BLAS_FOUND TRUE)
             set(BLAS_LIBRARIES
                 "${BLAS_atlas_cblas_LIBRARY}"
                 "${BLAS_atlas_LIBRARY}"
             )
         endif()
     endif()
-endmacro()
+
+    # Try open-blas
+    if(NOT BLAS_LIBRARIES OR NOT BLAS_INCLUDE_DIR)
+        find_package(OpenBLAS QUIET
+          PATHS /usr/local $ENV{OpenBLAS_HOME} $ENV{OpenBLAS}
+          PATHS_SUFFIXES openblas openblas-base
+        )
+        if(OpenBLAS_FOUND)
+            if(NOT EXISTS "${OpenBLAS_LIBRARIES}")
+              string(REPLACE "'" "" OpenBLAS_LIBRARIES ${OpenBLAS_LIBRARIES})
+            endif()
+            if(NOT EXISTS "${OpenBLAS_INCLUDE_DIRS}")
+              string(REPLACE "'" "" OpenBLAS_INCLUDE_DIRS ${OpenBLAS_INCLUDE_DIRS})
+            endif()
+            set(BLAS_LIBRARIES ${OpenBLAS_LIBRARIES})
+            set(BLAS_INCLUDE_DIR ${OpenBLAS_INCLUDE_DIRS})
+        endif()
+    endif()
+    if(BLAS_FOUND)
+      set(BLAS_FOUND TRUE PARENT_SCOPE)
+    endif()
+    if(BLAS_LIBRARIES)
+      set(BLAS_LIBRARIES "${BLAS_LIBRARIES}" PARENT_SCOPE)
+    endif()
+    if(BLAS_INCLUDE_DIR)
+      set(BLAS_INCLUDE_DIR "${BLAS_INCLUDE_DIR}" PARENT_SCOPE)
+    endif()
+endfunction()
 
 function(_look_for_include_directories)
     # Adds BLAS_INCLUDE_DIR

@@ -104,7 +104,9 @@ function(add_copy_directory dircopy_TARGET directory)
     file(GLOB_RECURSE in_files RELATIVE "${dircopy_RELATIVE}" ${in_globs})
     if(NOT "${exclude_globs}" STREQUAL "")
         file(GLOB_RECURSE exclude_files RELATIVE "${dircopy_RELATIVE}" ${exclude_globs})
-        list(REMOVE_ITEM in_files ${exclude_files})
+        if(exclude_files)
+          list(REMOVE_ITEM in_files ${exclude_files})
+        endif()
     endif()
 
     # And do the copying
